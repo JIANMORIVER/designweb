@@ -1,4 +1,3 @@
-
 export type Category = 'All' | 'Product' | 'Cultural' | 'Interaction' | 'Graphic' | 'Photography';
 
 export interface Project {
@@ -33,9 +32,8 @@ export interface PersonalInfo {
   tagline: string;
   email: string;
   socials: {
-    behance: string;
-    instagram: string;
-    linkedin: string;
+    phone: string;
+    wechat: string;
   };
   about: string;
 }

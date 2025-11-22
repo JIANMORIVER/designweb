@@ -3,6 +3,44 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ContentState, Project, ResumeItem, Skill, PersonalInfo } from '../types';
 import { INITIAL_CONTENT } from '../constants';
 
+// Utility to compress images to avoid LocalStorage quota limits
+export const compressImage = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200;
+        const scaleSize = MAX_WIDTH / img.width;
+        
+        // Only resize if image is larger than MAX_WIDTH
+        if (img.width > MAX_WIDTH) {
+            canvas.width = MAX_WIDTH;
+            canvas.height = img.height * scaleSize;
+        } else {
+            canvas.width = img.width;
+            canvas.height = img.height;
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            reject(new Error("Could not get canvas context"));
+            return;
+        }
+        
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // Compress to JPEG at 0.7 quality
+        resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 interface ContentContextType {
   content: ContentState;
   isEditMode: boolean;
@@ -47,17 +85,27 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, []);
 
-  // Save to localStorage whenever content changes
+  // Save to localStorage whenever content changes with Error Handling
   useEffect(() => {
-    localStorage.setItem('portfolio_content', JSON.stringify(content));
+    try {
+      localStorage.setItem('portfolio_content', JSON.stringify(content));
+    } catch (e) {
+      // Check for QuotaExceededError
+      if (e instanceof DOMException && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+        alert("⚠️ 存储空间不足！\n\n图片占用空间过大。系统已自动尝试压缩，但仍超出浏览器限制。\n建议：\n1. 删除部分不需要的图片\n2. 重置内容");
+      } else {
+        console.error("Failed to save content:", e);
+      }
+    }
   }, [content]);
 
   const toggleEditMode = () => setIsEditMode(prev => !prev);
 
   const resetContent = () => {
-    if (window.confirm("Are you sure you want to reset all changes? This cannot be undone.")) {
+    if (window.confirm("确定要重置所有内容吗？这将清除你所有的修改和上传的图片。")) {
       setContent(INITIAL_CONTENT);
       localStorage.removeItem('portfolio_content');
+      window.location.reload();
     }
   };
 
@@ -100,12 +148,12 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addProject = () => {
     const newProject: Project = {
       id: `new_${Date.now()}`,
-      title: 'New Project',
+      title: '新项目',
       category: 'Product',
       year: new Date().getFullYear().toString(),
-      description: 'Description of your new project...',
-      tags: ['New'],
-      coverImage: 'https://via.placeholder.com/800x600?text=New+Project',
+      description: '请点击此处编辑项目描述...',
+      tags: ['新标签'],
+      coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop',
       gallery: []
     };
     setContent(prev => ({
@@ -115,7 +163,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteProject = (id: string) => {
-    if (window.confirm("Delete this project?")) {
+    if (window.confirm("确定要删除这个项目吗？")) {
       setContent(prev => ({
         ...prev,
         projects: prev.projects.filter(p => p.id !== id)

@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Project } from '../types';
-import { X, Plus, Trash2 } from 'lucide-react';
-import { useContent } from '../contexts/ContentContext';
+import { X, Plus, Trash2, Loader2 } from 'lucide-react';
+import { useContent, compressImage } from '../contexts/ContentContext';
 import Editable from './Editable';
 
 interface ProjectModalProps {
@@ -12,6 +13,7 @@ interface ProjectModalProps {
 
 const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, onClose }) => {
   const { content, updateProject, updateProjectGallery, isEditMode } = useContent();
+  const [isUploading, setIsUploading] = useState(false);
   
   // Find the latest version of the project from context in case it was updated
   const project = content.projects.find(p => p.id === initialProject.id) || initialProject;
@@ -28,25 +30,33 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.style.display = 'none';
+    document.body.appendChild(input);
+
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        if (file.size > 5 * 1024 * 1024) {
-          alert("File too large (Max 5MB)");
-          return;
+        setIsUploading(true);
+        try {
+           const compressed = await compressImage(file);
+           updateProjectGallery(project.id, [...project.gallery, compressed]);
+        } catch (err) {
+           console.error("Failed to compress image", err);
+           alert("图片上传失败");
+        } finally {
+           setIsUploading(false);
+           document.body.removeChild(input);
         }
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          updateProjectGallery(project.id, [...project.gallery, reader.result as string]);
-        };
-        reader.readAsDataURL(file);
+      } else {
+        document.body.removeChild(input);
       }
     };
+    
     input.click();
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -60,14 +70,14 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 100 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="bg-stone-50 w-full max-w-5xl h-full md:h-[90vh] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col z-10"
+        className="bg-stone-50 dark:bg-stone-900 w-full max-w-5xl h-full md:h-[90vh] rounded-3xl shadow-2xl overflow-hidden relative flex flex-col z-10"
       >
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-6 right-6 z-20 bg-white/80 backdrop-blur p-2 rounded-full hover:bg-stone-200 transition-colors"
+          className="absolute top-6 right-6 z-20 bg-white/80 dark:bg-black/50 backdrop-blur p-2 rounded-full hover:bg-stone-200 dark:hover:bg-white/20 transition-colors"
         >
-          <X size={24} className="text-stone-800" />
+          <X size={24} className="text-stone-800 dark:text-stone-200" />
         </button>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -106,7 +116,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
             <div className="md:col-span-1 space-y-8">
                <div>
                  <h4 className="text-sm uppercase text-stone-400 tracking-widest font-bold mb-2">Timeline</h4>
-                 <p className="text-stone-800 font-medium">
+                 <p className="text-stone-800 dark:text-stone-200 font-medium">
                    <Editable value={project.year} onSave={(v) => updateProject(project.id, 'year', v)} />
                  </p>
                </div>
@@ -114,12 +124,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
                  <h4 className="text-sm uppercase text-stone-400 tracking-widest font-bold mb-2">Tags</h4>
                  <div className="flex flex-wrap gap-2">
                    {project.tags.map((tag, idx) => (
-                     <span key={idx} className="border border-stone-200 px-2 py-1 rounded text-sm text-stone-600">
-                        {/* Editing tags individually is complex, simplifying to display only for now or allowing edit via a joined string if needed. 
-                            For this demo, let's make them simple text edits if the user really wants, 
-                            but managing the array structure via a simple modal is tricky. 
-                            Let's assume editing tags is an advanced feature or handled by editing the whole list string.
-                         */}
+                     <span key={idx} className="border border-stone-200 dark:border-stone-700 px-2 py-1 rounded text-sm text-stone-600 dark:text-stone-300">
                         {tag}
                      </span>
                    ))}
@@ -129,16 +134,16 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
 
             <div className="md:col-span-2 space-y-8">
               <div>
-                <h3 className="font-display text-2xl font-bold mb-4 text-stone-900">Overview</h3>
-                <div className="text-lg text-stone-600 leading-relaxed">
+                <h3 className="font-display text-2xl font-bold mb-4 text-stone-900 dark:text-stone-100">Overview</h3>
+                <div className="text-lg text-stone-600 dark:text-stone-300 leading-relaxed">
                   <Editable value={project.description} onSave={(v) => updateProject(project.id, 'description', v)} type="textarea" />
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-stone-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-stone-200 dark:border-stone-800">
                 <div>
-                  <h4 className="font-bold text-stone-900 mb-2">The Challenge</h4>
-                  <div className="text-stone-600">
+                  <h4 className="font-bold text-stone-900 dark:text-stone-100 mb-2">The Challenge</h4>
+                  <div className="text-stone-600 dark:text-stone-400">
                     <Editable 
                       value={project.challenge || "Describe the challenge..."} 
                       onSave={(v) => updateProject(project.id, 'challenge', v)} 
@@ -147,8 +152,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-bold text-stone-900 mb-2">The Solution</h4>
-                  <div className="text-stone-600">
+                  <h4 className="font-bold text-stone-900 dark:text-stone-100 mb-2">The Solution</h4>
+                  <div className="text-stone-600 dark:text-stone-400">
                     <Editable 
                       value={project.solution || "Describe the solution..."} 
                       onSave={(v) => updateProject(project.id, 'solution', v)} 
@@ -167,6 +172,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
                 <Editable 
                   value={img} 
                   type="image" 
+                  className="block w-full"
                   onSave={(v) => {
                     const newGallery = [...project.gallery];
                     newGallery[idx] = v;
@@ -185,7 +191,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
                       const newGallery = project.gallery.filter((_, i) => i !== idx);
                       updateProjectGallery(project.id, newGallery);
                     }}
-                    className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -196,10 +202,11 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
             {isEditMode && (
               <button 
                 onClick={handleAddGalleryImage}
-                className="w-full py-8 border-2 border-dashed border-stone-300 rounded-xl flex flex-col items-center justify-center text-stone-500 hover:bg-stone-100 hover:border-stone-400 transition-all"
+                disabled={isUploading}
+                className="w-full py-8 border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-xl flex flex-col items-center justify-center text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 hover:border-stone-400 transition-all"
               >
-                <Plus size={32} className="mb-2" />
-                <span className="font-bold">Add Gallery Image</span>
+                {isUploading ? <Loader2 className="animate-spin mb-2" size={32} /> : <Plus size={32} className="mb-2" />}
+                <span className="font-bold">{isUploading ? "Processing..." : "Add Gallery Image"}</span>
               </button>
             )}
           </div>
