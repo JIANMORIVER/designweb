@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useContent } from '../contexts/ContentContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import Editable from './Editable';
 import { Mail, ExternalLink } from 'lucide-react';
 
 const Resume: React.FC = () => {
   const { content, updatePersonalInfo, updateResumeItem, updateSkill } = useContent();
+  const { t } = useLanguage();
   const { resume, skills, personalInfo } = content;
 
   return (
@@ -20,7 +22,7 @@ const Resume: React.FC = () => {
             viewport={{ once: true }}
             className="font-display text-4xl font-bold mb-8 text-stone-900 dark:text-stone-100"
           >
-            Experience & Background
+            {t('sect.experience')}
           </motion.h2>
           
           <div className="space-y-6 mb-16">
@@ -57,7 +59,7 @@ const Resume: React.FC = () => {
             viewport={{ once: true }}
             className="liquid-card p-8 rounded-3xl"
           >
-            <h3 className="font-display text-2xl font-bold mb-8 text-stone-900 dark:text-stone-100">Software Proficiency</h3>
+            <h3 className="font-display text-2xl font-bold mb-8 text-stone-900 dark:text-stone-100">{t('sect.software')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
               {skills.map((skill, idx) => (
                 <div key={idx}>
@@ -88,14 +90,14 @@ const Resume: React.FC = () => {
         <div className="lg:col-span-5 relative">
           <div className="lg:sticky lg:top-32">
             <div className="liquid-card p-8 md:p-10 rounded-3xl">
-              <h3 className="font-display text-2xl font-bold mb-6 text-stone-900 dark:text-stone-100">About Me</h3>
+              <h3 className="font-display text-2xl font-bold mb-6 text-stone-900 dark:text-stone-100">{t('sect.about')}</h3>
               <div className="text-stone-600 dark:text-stone-300 leading-loose mb-8 text-lg">
                  <Editable value={personalInfo.about} onSave={(v) => updatePersonalInfo('about', v)} type="textarea" label="About" />
               </div>
               
               <div className="space-y-6 border-t border-stone-200/50 dark:border-white/10 pt-8">
                 <div>
-                   <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Contact</h4>
+                   <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">{t('sect.contact')}</h4>
                    <div className="flex items-center gap-3 text-stone-900 dark:text-stone-100 font-bold text-lg group cursor-pointer">
                      <div className="p-2 rounded-full bg-stone-100 dark:bg-white/10 group-hover:scale-110 transition-transform">
                         <Mail size={20} />
@@ -105,7 +107,7 @@ const Resume: React.FC = () => {
                 </div>
 
                 <div>
-                   <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Socials</h4>
+                   <h4 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">{t('sect.socials')}</h4>
                    <div className="flex flex-col gap-3">
                      {Object.entries(personalInfo.socials).map(([platform, url]) => (
                        <a 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useContent } from '../contexts/ContentContext';
@@ -13,6 +14,13 @@ const Hero: React.FC = () => {
   const { scrollY } = useScroll();
   const yContent = useTransform(scrollY, [0, 500], [0, 150]);
   const opacityContent = useTransform(scrollY, [0, 300], [1, 0]);
+
+  const handleScrollDown = () => {
+    const workSection = document.getElementById('work');
+    if (workSection) {
+        workSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <section className="min-h-screen flex flex-col justify-center items-center px-6 relative overflow-hidden transition-colors duration-500">
@@ -89,7 +97,10 @@ const Hero: React.FC = () => {
         className="absolute bottom-12 z-30"
       >
         <Magnetic strength={0.5}>
-           <div className="p-4 rounded-full liquid-nav-container text-stone-400 animate-bounce cursor-pointer hover:text-stone-600 dark:hover:text-white transition-colors">
+           <div 
+             onClick={handleScrollDown}
+             className="p-4 rounded-full liquid-nav-container text-stone-400 animate-bounce cursor-pointer hover:text-stone-600 dark:hover:text-white transition-colors"
+           >
              <ArrowDown size={24} />
            </div>
         </Magnetic>

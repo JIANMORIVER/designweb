@@ -1,4 +1,5 @@
-export type Category = 'All' | 'Product' | 'Cultural' | 'Interaction' | 'Graphic' | 'Photography';
+
+export type Category = 'All' | 'Product' | 'Interaction' | 'Graphic';
 
 export interface Project {
   id: string;
@@ -11,6 +12,7 @@ export interface Project {
   tags: string[];
   challenge?: string;
   solution?: string;
+  link?: string;
 }
 
 export interface ResumeItem {

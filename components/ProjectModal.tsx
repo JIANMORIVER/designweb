@@ -2,8 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Project } from '../types';
-import { X, Plus, Trash2, Loader2 } from 'lucide-react';
+import { X, Plus, Trash2, Loader2, ExternalLink } from 'lucide-react';
 import { useContent, compressImage } from '../contexts/ContentContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import Editable from './Editable';
 
 interface ProjectModalProps {
@@ -13,6 +14,7 @@ interface ProjectModalProps {
 
 const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, onClose }) => {
   const { content, updateProject, updateProjectGallery, isEditMode } = useContent();
+  const { t } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   
   // Find the latest version of the project from context in case it was updated
@@ -97,7 +99,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
                     transition={{ delay: 0.2 }}
                     className="bg-stone-100 text-stone-900 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 inline-block"
                  >
-                   {project.category}
+                   {t(`cat.${project.category}`)}
                  </motion.span>
                  <motion.div 
                     initial={{ opacity: 0, y: 20 }}
@@ -115,13 +117,13 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
           <div className="p-8 md:p-16 grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="md:col-span-1 space-y-8">
                <div>
-                 <h4 className="text-sm uppercase text-stone-400 tracking-widest font-bold mb-2">Timeline</h4>
+                 <h4 className="text-sm uppercase text-stone-400 tracking-widest font-bold mb-2">{t('proj.timeline')}</h4>
                  <p className="text-stone-800 dark:text-stone-200 font-medium">
                    <Editable value={project.year} onSave={(v) => updateProject(project.id, 'year', v)} />
                  </p>
                </div>
                <div>
-                 <h4 className="text-sm uppercase text-stone-400 tracking-widest font-bold mb-2">Tags</h4>
+                 <h4 className="text-sm uppercase text-stone-400 tracking-widest font-bold mb-2">{t('proj.tags')}</h4>
                  <div className="flex flex-wrap gap-2">
                    {project.tags.map((tag, idx) => (
                      <span key={idx} className="border border-stone-200 dark:border-stone-700 px-2 py-1 rounded text-sm text-stone-600 dark:text-stone-300">
@@ -129,12 +131,25 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
                      </span>
                    ))}
                  </div>
+                 {project.link && (
+                    <div className="mt-6">
+                        <a 
+                          href={project.link} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-lg text-sm font-bold hover:bg-stone-700 dark:hover:bg-stone-300 transition-colors"
+                        >
+                           <ExternalLink size={16} />
+                           {t('proj.visit')}
+                        </a>
+                    </div>
+                 )}
                </div>
             </div>
 
             <div className="md:col-span-2 space-y-8">
               <div>
-                <h3 className="font-display text-2xl font-bold mb-4 text-stone-900 dark:text-stone-100">Overview</h3>
+                <h3 className="font-display text-2xl font-bold mb-4 text-stone-900 dark:text-stone-100">{t('proj.overview')}</h3>
                 <div className="text-lg text-stone-600 dark:text-stone-300 leading-relaxed">
                   <Editable value={project.description} onSave={(v) => updateProject(project.id, 'description', v)} type="textarea" />
                 </div>
@@ -142,7 +157,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-stone-200 dark:border-stone-800">
                 <div>
-                  <h4 className="font-bold text-stone-900 dark:text-stone-100 mb-2">The Challenge</h4>
+                  <h4 className="font-bold text-stone-900 dark:text-stone-100 mb-2">{t('proj.challenge')}</h4>
                   <div className="text-stone-600 dark:text-stone-400">
                     <Editable 
                       value={project.challenge || "Describe the challenge..."} 
@@ -152,7 +167,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-bold text-stone-900 dark:text-stone-100 mb-2">The Solution</h4>
+                  <h4 className="font-bold text-stone-900 dark:text-stone-100 mb-2">{t('proj.solution')}</h4>
                   <div className="text-stone-600 dark:text-stone-400">
                     <Editable 
                       value={project.solution || "Describe the solution..."} 
@@ -206,7 +221,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project: initialProject, on
                 className="w-full py-8 border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-xl flex flex-col items-center justify-center text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 hover:border-stone-400 transition-all"
               >
                 {isUploading ? <Loader2 className="animate-spin mb-2" size={32} /> : <Plus size={32} className="mb-2" />}
-                <span className="font-bold">{isUploading ? "Processing..." : "Add Gallery Image"}</span>
+                <span className="font-bold">{isUploading ? t('proj.processing') : t('proj.gallery_add')}</span>
               </button>
             )}
           </div>

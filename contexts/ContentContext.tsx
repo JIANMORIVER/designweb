@@ -1,9 +1,9 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { ContentState, Project, ResumeItem, Skill, PersonalInfo } from '../types';
 import { INITIAL_CONTENT } from '../constants';
 
-// Utility to compress images to avoid LocalStorage quota limits
+// Utility to compress images (kept for type compatibility if needed by consumers, though edit mode is off)
 export const compressImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -70,43 +70,16 @@ export const useContent = () => {
 };
 
 export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Always use INITIAL_CONTENT, do not load from localStorage to ensure static content updates (like new images) are seen.
   const [content, setContent] = useState<ContentState>(INITIAL_CONTENT);
-  const [isEditMode, setIsEditMode] = useState(false);
+  
+  // Permanently disable edit mode
+  const isEditMode = false;
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedContent = localStorage.getItem('portfolio_content');
-    if (savedContent) {
-      try {
-        setContent(JSON.parse(savedContent));
-      } catch (e) {
-        console.error("Failed to parse saved content", e);
-      }
-    }
-  }, []);
-
-  // Save to localStorage whenever content changes with Error Handling
-  useEffect(() => {
-    try {
-      localStorage.setItem('portfolio_content', JSON.stringify(content));
-    } catch (e) {
-      // Check for QuotaExceededError
-      if (e instanceof DOMException && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
-        alert("⚠️ 存储空间不足！\n\n图片占用空间过大。系统已自动尝试压缩，但仍超出浏览器限制。\n建议：\n1. 删除部分不需要的图片\n2. 重置内容");
-      } else {
-        console.error("Failed to save content:", e);
-      }
-    }
-  }, [content]);
-
-  const toggleEditMode = () => setIsEditMode(prev => !prev);
+  const toggleEditMode = () => {};
 
   const resetContent = () => {
-    if (window.confirm("确定要重置所有内容吗？这将清除你所有的修改和上传的图片。")) {
-      setContent(INITIAL_CONTENT);
-      localStorage.removeItem('portfolio_content');
-      window.location.reload();
-    }
+    setContent(INITIAL_CONTENT);
   };
 
   const updatePersonalInfo = (field: keyof PersonalInfo, value: any) => {
@@ -146,29 +119,11 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addProject = () => {
-    const newProject: Project = {
-      id: `new_${Date.now()}`,
-      title: '新项目',
-      category: 'Product',
-      year: new Date().getFullYear().toString(),
-      description: '请点击此处编辑项目描述...',
-      tags: ['新标签'],
-      coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop',
-      gallery: []
-    };
-    setContent(prev => ({
-      ...prev,
-      projects: [newProject, ...prev.projects]
-    }));
+    // Disabled functionality
   };
 
   const deleteProject = (id: string) => {
-    if (window.confirm("确定要删除这个项目吗？")) {
-      setContent(prev => ({
-        ...prev,
-        projects: prev.projects.filter(p => p.id !== id)
-      }));
-    }
+    // Disabled functionality
   };
 
   return (

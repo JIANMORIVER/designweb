@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Project, Category } from '../types';
 import { ArrowUpRight, Trash2 } from 'lucide-react';
 import { useContent } from '../contexts/ContentContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import Editable from './Editable';
 
 interface ProjectCardProps {
@@ -12,6 +13,7 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
   const { isEditMode, updateProject, deleteProject } = useContent();
+  const { t } = useLanguage();
 
   return (
     <motion.div
@@ -84,7 +86,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
             </span>
           </div>
           <div className="text-sm font-medium text-stone-500 dark:text-stone-400">
-             <Editable value={project.category} onSave={(v) => updateProject(project.id, 'category', v as Category)} label="Category" />
+             {/* We display the translated string, but editing still saves the English key if edited via standard modal, but here we just display translation */}
+             {t(`cat.${project.category}`)}
           </div>
         </div>
       </div>
